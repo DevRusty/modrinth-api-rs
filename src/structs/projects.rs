@@ -5,7 +5,6 @@
 use super::Date;
 use serde::{Deserialize, Serialize};
 
-// #[derive()]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Project {
     /// The slug of a project, used for vanity URLs
