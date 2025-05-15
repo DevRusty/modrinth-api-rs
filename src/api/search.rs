@@ -1,13 +1,13 @@
+use super::*;
+use crate::utils::check_id_slug;
 use crate::{
     structs::projects::Project,
     utils::{RequestBuilderCustomSend, UrlJoinAll},
 };
 
-use super::*;
-
 impl ModrinthAPI {
     pub async fn get_project_by_id(&self, project_id: &str) -> Result<Project> {
-        // TODO: read #1 in TODO.md file (core section)
+        check_id_slug(&[project_id])?;
         self.client
             .get(BASE_URL.join_all(vec!["project", project_id]))
             .custom_send_json()

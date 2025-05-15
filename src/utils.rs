@@ -1,8 +1,18 @@
-use crate::Result;
+use crate::{Error, Result};
+use lazy_regex::regex_is_match;
 use reqwest::{RequestBuilder, Response, StatusCode};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use url::Url;
+
+pub fn check_id_slug<S: AsRef<str>>(inputs: &[S]) -> Result<()> {
+    inputs.iter().try_for_each(|input| {
+        if !regex_is_match!(r#"^[\w!@$()`.+,"\-']{3,64}$"#, input.as_ref()) {
+            return Err(Error::InvalidIDorSlug);
+        }
+        Ok(())
+    })
+}
 
 // From: https://github.com/gorilla-devs/ferinth/blob/master/src/request.rs
 pub(crate) trait RequestBuilderCustomSend {
@@ -44,25 +54,6 @@ fn check_rate_limit(response: Response) -> Result<Response> {
         )),
         _ => Ok(response),
     }
-    // if response.status() == StatusCode::GONE {
-    //     Err(crate::Error::ApiDeprecated)
-    // } else if response.status() == StatusCode::TOO_MANY_REQUESTS {
-    //     Err(crate::Error::RateLimitExceeded(
-    //         response
-    //             .headers()
-    //             .get("X-Ratelimit-Reset")
-    //             .map(|header| {
-    //                 header
-    //                     .to_str()
-    //                     .expect("Corrupted ratelimit header")
-    //                     .parse()
-    //                     .expect("Corrupted ratelimit header")
-    //             })
-    //             .expect("Corrupted ratelimit header"),
-    //     ))
-    // } else {
-    //     Ok(response)
-    // }
 }
 
 // Extensions to `url::Url` to make it generally easier to use

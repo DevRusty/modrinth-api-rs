@@ -1,7 +1,7 @@
 # TODO
 
 ## Core:
-- [ ] - Verify slug id using ```^[\w!@$()`.+,"\-']{3,64}$``` regex 
+- [x] - Verify slug id using ```^[\w!@$()`.+,"\-']{3,64}$``` regex 
 
 ## structs\project.rs:
 
