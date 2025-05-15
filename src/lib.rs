@@ -10,7 +10,8 @@ pub mod utils;
 pub static BASE_URL: LazyLock<Url> = LazyLock::new(|| {
     Url::parse("https://api.modrinth.com/")
         .expect("Invalid base URL")
-        .join(concat!("v", "2", "/")).expect("Invalid API base URL")
+        .join(concat!("v", "2", "/"))
+        .expect("Invalid API base URL")
 });
 
 #[derive(thiserror::Error, Debug)]
