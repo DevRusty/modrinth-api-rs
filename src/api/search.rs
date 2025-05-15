@@ -27,4 +27,12 @@ mod tests {
         assert_eq!(response.title, "Complementary Shaders - Reimagined");
         Ok(())
     }
+
+    #[tokio::test]
+    async fn asrt_slug_error() -> Result<()> {
+        let api = ModrinthAPI::default();
+        let response = api.get_project_by_id("dffdsfdsfsdfdsf").await;
+        assert!(response.is_err());
+        Ok(())
+    }
 }
