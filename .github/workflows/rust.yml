@@ -6,7 +6,7 @@ on:
       - '**'
 
 env:
-  BINARY_NAME: gtokenchecker-rs
+  BINARY_NAME: modrinth-api
   BUILD_WINDOWS: 1
   BUILD_LINUX: 1
 
@@ -92,8 +92,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BINARY_NAME }}-${{ matrix.build_os }}-${{ matrix.arch }}-${{ steps.build_type.outputs.build_mode }}
-          path: artifacts/* # Загружаем содержимое папки artifacts
-          if-no-files-found: error # Лучше ошибка, если файлов нет
+          path: artifacts/*
+          if-no-files-found: error
 
   check_version:
     name: Check Version
@@ -137,7 +137,7 @@ jobs:
               echo "Version $CURRENT_VERSION is the same as latest tag $LATEST_TAG. No release needed."
             fi
           else
-            SHOULD_RELEASE="true" # Нет тегов, значит это первый релиз
+            SHOULD_RELEASE="true"
             echo "No previous tags found. Should release version $CURRENT_VERSION."
           fi
           echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
