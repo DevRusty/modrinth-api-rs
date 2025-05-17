@@ -6,16 +6,255 @@ on:
       - '**'
 
 env:
-  CARGO_TERM_COLOR: always
+  BINARY_NAME: gtokenchecker-rs
+  BUILD_WINDOWS: 1
+  BUILD_LINUX: 1
 
 jobs:
   build:
-
+    name: Build (Debug/Release based on ref)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+            rust: stable
+            build_os: windows
+            arch: x64
+          - target: i686-pc-windows-gnu
+            os: windows-latest
+            rust: stable
+            build_os: windows
+            arch: x86
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            rust: stable
+            build_os: linux
+            arch: x64
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          components: rustfmt
+          override: true
+
+      - name: Install MinGW-w64 toolchain
+        if: matrix.build_os == 'windows'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mingw-w64
+
+      - name: Determine build type
+        id: build_type
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "build_mode=release" >> $GITHUB_OUTPUT
+          else
+            echo "build_mode=debug" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build project (${{ matrix.build_os }} - ${{ matrix.arch }})
+        if: |
+          (matrix.build_os == 'windows' && env.BUILD_WINDOWS == '1') ||
+          (matrix.build_os == 'linux' && env.BUILD_LINUX == '1')
+        run: cargo build ${{ steps.build_type.outputs.build_mode == 'release' && '--release' || '' }} --target ${{ matrix.target }}
+
+      - name: Create artifacts directory
+        shell: bash
+        run: mkdir -p artifacts
+
+      - name: Copy binary to artifacts (${{ matrix.build_os }} - ${{ matrix.arch }})
+        if: |
+          (matrix.build_os == 'windows' && env.BUILD_WINDOWS == '1') ||
+          (matrix.build_os == 'linux' && env.BUILD_LINUX == '1')
+        shell: bash
+        run: |
+          BUILD_MODE="${{ steps.build_type.outputs.build_mode }}"
+          TARGET_DIR="target/${{ matrix.target }}/${BUILD_MODE}"
+          SOURCE_EXE="${TARGET_DIR}/${{ env.BINARY_NAME }}.exe"
+          SOURCE_BIN="${TARGET_DIR}/${{ env.BINARY_NAME }}"
+          
+          if [[ "${{ matrix.build_os }}" == "windows" ]]; then
+            cp "${SOURCE_EXE}" "artifacts/${{ env.BINARY_NAME }}-${{ matrix.target }}.exe"
+          else
+            cp "${SOURCE_BIN}" "artifacts/${{ env.BINARY_NAME }}-${{ matrix.target }}"
+          fi
+
+      - name: Upload Build Artifacts (${{ steps.build_type.outputs.build_mode }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BINARY_NAME }}-${{ matrix.build_os }}-${{ matrix.arch }}-${{ steps.build_type.outputs.build_mode }}
+          path: artifacts/* # Загружаем содержимое папки artifacts
+          if-no-files-found: error # Лучше ошибка, если файлов нет
+
+  check_version:
+    name: Check Version
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_version_logic.outputs.should_release }}
+      current_version: ${{ steps.get_version.outputs.current_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version = ' Cargo.toml | sed -E 's/^version = "(.*)"/\1/')
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current Cargo.toml version: $VERSION"
+
+      - name: Get latest release tag
+        id: get_latest_tag
+        run: |
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest Git tag: $LATEST_TAG"
+
+      - name: Check if version has changed
+        id: check_version_logic
+        run: |
+          CURRENT_VERSION="${{ steps.get_version.outputs.current_version }}"
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+          SHOULD_RELEASE="false"
+
+          if [[ -n "$LATEST_TAG" ]]; then
+            LATEST_VERSION_FROM_TAG="${LATEST_TAG#v}" # Удаляем 'v' если есть
+            if [[ "$CURRENT_VERSION" != "$LATEST_VERSION_FROM_TAG" ]]; then
+              SHOULD_RELEASE="true"
+              echo "Version changed: $LATEST_VERSION_FROM_TAG -> $CURRENT_VERSION. Should release."
+            else
+              echo "Version $CURRENT_VERSION is the same as latest tag $LATEST_TAG. No release needed."
+            fi
+          else
+            SHOULD_RELEASE="true" # Нет тегов, значит это первый релиз
+            echo "No previous tags found. Should release version $CURRENT_VERSION."
+          fi
+          echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
+
+  build_release:
+    name: Build Release Binaries
+    needs: [ check_version ]
+    if: needs.check_version.outputs.should_release == 'true' && github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+            rust: stable
+            build_os: windows
+            arch: x64
+          - target: i686-pc-windows-gnu
+            os: windows-latest
+            rust: stable
+            build_os: windows
+            arch: x86
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            rust: stable
+            build_os: linux
+            arch: x64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          components: rustfmt
+          override: true
+
+      - name: Install MinGW-w64 toolchain
+        if: matrix.build_os == 'windows'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mingw-w64
+
+      - name: Build Release Binaries (${{ matrix.build_os }} - ${{ matrix.arch }})
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Create release package directory
+        shell: bash
+        run: mkdir -p release-package
+
+      - name: Copy release binary to package (${{ matrix.build_os }} - ${{ matrix.arch }})
+        shell: bash
+        run: |
+          TARGET_DIR="target/${{ matrix.target }}/release"
+          DEST_DIR="release-package" # Всегда одна и та же папка назначения для артефакта
+          SOURCE_EXE="${TARGET_DIR}/${{ env.BINARY_NAME }}.exe"
+          SOURCE_BIN="${TARGET_DIR}/${{ env.BINARY_NAME }}"
+
+          if [[ "${{ matrix.build_os }}" == "windows" ]]; then
+            cp "${SOURCE_EXE}" "${DEST_DIR}/${{ env.BINARY_NAME }}-${{ matrix.target }}.exe"
+          else
+            cp "${SOURCE_BIN}" "${DEST_DIR}/${{ env.BINARY_NAME }}-${{ matrix.target }}"
+          fi
+
+      - name: Upload Release Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-asset-${{ matrix.target }}
+          path: release-package/*
+          if-no-files-found: error
+
+  publish_release:
+    name: Publish GitHub Release
+    needs: [ check_version, build_release ]
+    if: needs.check_version.outputs.should_release == 'true' && github.ref_name == 'main'
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (for release-drafter)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all release assets
+        uses: actions/download-artifact@v4
+        with:
+          path: all-release-assets
+
+      - name: List downloaded files (for debugging)
+        run: |
+          echo "Downloaded artifacts will be in subdirectories under all-release-assets/"
+          ls -R all-release-assets
+
+      - name: Create Release Notes
+        id: release_notes
+        uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: Release v${{ needs.check_version.outputs.current_version }}
+          tag: v${{ needs.check_version.outputs.current_version }}
+
+      - name: Upload Release Assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.check_version.outputs.current_version }}
+          name: Release v${{ needs.check_version.outputs.current_version }}
+          body: ${{ steps.release_notes.outputs.body }}
+          files: |
+            all-release-assets/release-asset-*/*
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
