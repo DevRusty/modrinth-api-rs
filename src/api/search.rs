@@ -1,17 +1,45 @@
 use super::*;
-use crate::utils::check_id_slug;
-use crate::{
-    structs::projects::Project,
-    utils::{RequestBuilderCustomSend, UrlJoinAll},
-};
+use crate::structs::search::{Facet, Response, Sort};
+use crate::utils::UrlWithQuery;
+use crate::utils::{RequestBuilderCustomSend, UrlJoinAll};
 
 impl ModrinthAPI {
-    pub async fn get_project_by_id(&self, project_id: &str) -> Result<Project> {
-        check_id_slug(&[project_id])?;
-        self.client
-            .get(BASE_URL.join_all(vec!["project", project_id]))
-            .custom_send_json()
-            .await
+    pub async fn extended_search(
+        &self,
+        query: &str,
+        sort: &Sort,
+        limit: Option<u32>,
+        offset: Option<u32>,
+        mut facets: Vec<Vec<Facet>>,
+    ) -> Result<Response> {
+        let limit = limit.unwrap_or(20);
+        let offset = offset.unwrap_or(20);
+
+        let mut url = BASE_URL
+            .join_all(vec!["search"])
+            .with_query("query", query)
+            .with_query("index", sort)
+            .with_query("limit", &limit)
+            .with_query("offset", &offset);
+
+        facets.retain(|e| !e.is_empty());
+        if !facets.is_empty() {
+            url = url.with_query_json("facets", facets)?
+        }
+
+        self.client.get(url).custom_send_json().await
+    }
+
+    pub async fn search(&self, query: &str, sort: &Sort, limit: Option<u32>) -> Result<Response> {
+        let limit = limit.unwrap_or(20);
+
+        let url = BASE_URL
+            .join_all(vec!["search"])
+            .with_query("query", query)
+            .with_query("index", sort)
+            .with_query("limit", &limit);
+
+        self.client.get(url).custom_send_json().await
     }
 }
 
@@ -20,19 +48,14 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn get_valid_project() -> Result<()> {
+    async fn search_project() -> Result<()> {
         let api = ModrinthAPI::default();
-        // HVnmMxH1 -> Complementary Shaders - Reimagined
-        let response = api.get_project_by_id("HVnmMxH1").await?;
-        assert_eq!(response.title, "Complementary Shaders - Reimagined");
-        Ok(())
-    }
+        let response = api.search("xaeros", &Sort::Downloads, None).await?;
 
-    #[tokio::test]
-    async fn asrt_slug_error() -> Result<()> {
-        let api = ModrinthAPI::default();
-        let response = api.get_project_by_id("dffdsfdsfsdfdsf").await;
-        assert!(response.is_err());
+        let title = response.hits.first().unwrap().slug.as_ref();
+
+        assert!(title.is_some());
+        assert_eq!(title.unwrap(), "xaeros-minimap");
         Ok(())
     }
 }
