@@ -11,3 +11,4 @@
 - [ ] - implement custom deserializer for URL links
 - [ ] - implement custom struct for donation links
 - [ ] - implement custom struct for license
+- [ ] - implement custom `ProjectStatus` struct
