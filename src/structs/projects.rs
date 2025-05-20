@@ -82,6 +82,19 @@ pub struct Project {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectType {
+    /// Can be a mod, plugin, or data pack
+    Project,
+    Mod,
+    Shader,
+    Plugin,
+    Modpack,
+    Datapack,
+    ResourcePack,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum MonetizationStatus {
     Monetized,

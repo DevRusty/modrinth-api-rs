@@ -1,19 +1,80 @@
 use super::*;
-use crate::structs::search::{Facet, Response, Sort};
+use crate::structs::search::{ExtendedSearch, Response, Sort};
 use crate::utils::UrlWithQuery;
 use crate::utils::{RequestBuilderCustomSend, UrlJoinAll};
 
 impl ModrinthAPI {
+    /// Performs an extended search for projects on Modrinth, allowing for more granular control over the search
+    /// results through various filtering options.
+    ///
+    /// This function builds upon the basic search by introducing `offset` and `facets`
+    /// for more refined queries.
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - The search query string.
+    /// * `sort` - The sorting criteria for the search results (e.g., by downloads, recency).
+    /// * `limit` - An optional maximum number of results to return. Defaults to 20 if `None`.
+    /// * `extended_search` - A struct containing additional search parameters:
+    ///     * `offset` - An optional starting point for the results. Defaults to 20 if `None`.
+    ///     * `facets` - A vector of vectors of `Facet` enums, allowing for complex filtering.
+    ///                  Each inner vector represents a group of facets, where results must match
+    ///                  at least one facet from each inner group.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// * `Ok(Response)` - On successful retrieval of search results. The `Response` struct
+    ///                    contains a list of `Hit` objects representing the found projects.
+    /// * `Err(Error)` - If an error occurs during the API call or data processing.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use modrinth_api::{
+    ///     ModrinthAPI, structs::search::{Sort, ExtendedSearch, Facet, Response}
+    /// };
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let api = ModrinthAPI::default();
+    ///
+    ///     // Example: Search for "fabric" mods, sorted by downloads,
+    ///     // and filter for projects compatible with "1.19.2" and "Forge" loader.
+    ///     let extended_search_params = ExtendedSearch {
+    ///         offset: Some(0),
+    ///         facets: vec![
+    ///             vec![Facet::Versions("1.19.2".to_string())],
+    ///             vec![Facet::Categories("fabric".to_string())],
+    ///         ],
+    ///     };
+    ///
+    ///     let response: Response = api.extended_search(
+    ///         "fabric",
+    ///         &Sort::Downloads,
+    ///         Some(10),
+    ///         Some(extended_search_params),
+    ///     ).await?;
+    ///
+    ///     for hit in response.hits {
+    ///         println!("Project: {}", hit.title);
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub async fn extended_search(
         &self,
         query: &str,
         sort: &Sort,
         limit: Option<u32>,
-        offset: Option<u32>,
-        mut facets: Vec<Vec<Facet>>,
+        extended_search: Option<ExtendedSearch>,
     ) -> Result<Response> {
         let limit = limit.unwrap_or(20);
-        let offset = offset.unwrap_or(20);
+
+        let extended_search = extended_search.unwrap_or_default();
+        let offset = &extended_search.offset.unwrap_or(0);
+        let mut facets = extended_search.facets;
 
         let mut url = BASE_URL
             .join_all(vec!["search"])
@@ -30,6 +91,7 @@ impl ModrinthAPI {
         self.client.get(url).custom_send_json().await
     }
 
+    #[deprecated(since = "0.1.1", note = "Migrate to `extended_search` method")]
     pub async fn search(&self, query: &str, sort: &Sort, limit: Option<u32>) -> Result<Response> {
         let limit = limit.unwrap_or(20);
 
@@ -39,6 +101,8 @@ impl ModrinthAPI {
             .with_query("index", sort)
             .with_query("limit", &limit);
 
+        println!("{}", url);
+
         self.client.get(url).custom_send_json().await
     }
 }
@@ -46,11 +110,23 @@ impl ModrinthAPI {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::structs::projects::ProjectType;
+    use crate::structs::search::Facet;
 
     #[tokio::test]
     async fn search_project() -> Result<()> {
         let api = ModrinthAPI::default();
-        let response = api.search("xaeros", &Sort::Downloads, None).await?;
+        let response = api
+            .extended_search(
+                "xaeros",
+                &Sort::Downloads,
+                None,
+                Some(ExtendedSearch {
+                    offset: None,
+                    facets: vec![vec![Facet::ProjectType(ProjectType::Mod)]],
+                }),
+            )
+            .await?;
 
         let title = response.hits.first().unwrap().slug.as_ref();
 

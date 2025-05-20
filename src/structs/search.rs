@@ -1,4 +1,11 @@
 use super::*;
+use std::fmt::Display;
+
+#[derive(Debug, Clone, Default)]
+pub struct ExtendedSearch {
+    pub offset: Option<u32>,
+    pub facets: Vec<Vec<Facet>>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Sort {
@@ -21,8 +28,7 @@ impl std::fmt::Display for Sort {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Facet {
-    // TODO: read #7 in TOOD.md file (structs\projects section)
-    // ProjectType(projects::ProjectType),
+    ProjectType(projects::ProjectType),
     /// Mod loader or category to filter
     Categories(String),
     /// Game versions to filter
@@ -54,9 +60,9 @@ impl Serialize for Facet {
         S: serde::Serializer,
     {
         let output = match self {
-            // Facet::ProjectType(project_type) => {
-            //     format!("project_type:{project_type:?}",)
-            // }
+            Facet::ProjectType(project_type) => {
+                format!("project_type:{project_type:?}",)
+            }
             Facet::Categories(category) => format!("categories: {category}"),
             Facet::Versions(version) => format!("versions: {version}"),
             Facet::OpenSource(bool) => format!("open_source: {bool}"),
@@ -69,9 +75,31 @@ impl Serialize for Facet {
                 operation,
                 value,
             } => format!("{_type} {operation} {value}"),
-            // _ => "".to_string(),
         };
         serializer.collect_str(&output)
+    }
+}
+
+impl Display for Facet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str: String = match self {
+            Facet::ProjectType(project_type) => {
+                format!("project_type:{project_type:?}",)
+            }
+            Facet::Categories(category) => format!("categories: {category}"),
+            Facet::Versions(version) => format!("versions: {version}"),
+            Facet::OpenSource(bool) => format!("open_source: {bool}"),
+            Facet::License(license_id) => format!("license: {license_id}"),
+            Facet::Title(title) => format!("title: {title}"),
+            Facet::Author(author) => format!("author: {author}"),
+            Facet::ProjectID(project_id) => format!("project_id: {project_id}"),
+            Facet::Custom {
+                _type,
+                operation,
+                value,
+            } => format!("{_type} {operation} {value}"),
+        };
+        write!(f, "{}", str)
     }
 }
 
@@ -84,6 +112,12 @@ pub struct Response {
     pub limit: usize,
     /// The total number of results that match the query
     pub total_hits: usize,
+}
+
+impl Response {
+    pub fn show_hits(&self) {
+        self.hits.iter().for_each(|h| println!("{h}"));
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -124,4 +158,17 @@ pub struct SearchHit {
     pub license: String,
     pub gallery: Vec<Url>,
     pub featured_gallery: Option<Url>,
+}
+
+impl Display for SearchHit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Title: {} ({} downloads)\nAuthor: {}\nCategories: {}",
+            self.title,
+            self.downloads,
+            self.author,
+            self.display_categories.join(",")
+        )
+    }
 }
