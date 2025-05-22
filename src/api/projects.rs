@@ -1,8 +1,7 @@
 use super::*;
-use crate::utils::check_id_slug;
 use crate::{
     structs::projects::Project,
-    utils::{RequestBuilderCustomSend, UrlJoinAll},
+    utils::{RequestBuilderCustomSend, UrlJoinAll, check_id_slug},
 };
 
 impl ModrinthAPI {

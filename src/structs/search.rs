@@ -20,7 +20,7 @@ pub enum Sort {
     Updated,
 }
 
-impl std::fmt::Display for Sort {
+impl Display for Sort {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", format!("{self:?}").to_lowercase())
     }
@@ -127,11 +127,11 @@ pub struct SearchHit {
     pub title: String,
     pub description: String,
     pub categories: Vec<String>,
-    // TODO: read #1 in TOOD.md file (structs\projects section)
+    // TODO: read #1 in TODO.md file (structs\projects section)
     // pub client_side: projects::ProjectSupportRange,
     // pub server_side: projects::ProjectSupportRange,
 
-    // TODO: read #7 in TOOD.md file (structs\projects section)
+    // TODO: read #7 in TODO.md file (structs\projects section)
     // pub project_type: projects::ProjectType,
     pub downloads: usize,
     #[serde(deserialize_with = "deserialise_optional_url")]

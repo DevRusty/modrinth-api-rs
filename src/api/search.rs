@@ -1,7 +1,6 @@
 use super::*;
 use crate::structs::search::{ExtendedSearch, Response, Sort};
-use crate::utils::UrlWithQuery;
-use crate::utils::{RequestBuilderCustomSend, UrlJoinAll};
+use crate::utils::{RequestBuilderCustomSend, UrlJoinAll, UrlWithQuery};
 
 impl ModrinthAPI {
     /// Performs an extended search for projects on Modrinth, allowing for more granular control over the search
@@ -18,14 +17,14 @@ impl ModrinthAPI {
     /// * `extended_search` - A struct containing additional search parameters:
     ///     * `offset` - An optional starting point for the results. Defaults to 20 if `None`.
     ///     * `facets` - A vector of vectors of `Facet` enums, allowing for complex filtering.
-    ///                  Each inner vector represents a group of facets, where results must match
-    ///                  at least one facet from each inner group.
+    ///       Each inner vector represents a group of facets, where results must match
+    ///       at least one facet from each inner group.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
     /// * `Ok(Response)` - On successful retrieval of search results. The `Response` struct
-    ///                    contains a list of `Hit` objects representing the found projects.
+    ///   contains a list of `Hit` objects representing the found projects.
     /// * `Err(Error)` - If an error occurs during the API call or data processing.
     ///
     /// # Examples
@@ -80,8 +79,8 @@ impl ModrinthAPI {
             .join_all(vec!["search"])
             .with_query("query", query)
             .with_query("index", sort)
-            .with_query("limit", &limit)
-            .with_query("offset", &offset);
+            .with_query("limit", limit)
+            .with_query("offset", offset);
 
         facets.retain(|e| !e.is_empty());
         if !facets.is_empty() {
@@ -99,7 +98,7 @@ impl ModrinthAPI {
             .join_all(vec!["search"])
             .with_query("query", query)
             .with_query("index", sort)
-            .with_query("limit", &limit);
+            .with_query("limit", limit);
 
         println!("{}", url);
 
@@ -110,8 +109,7 @@ impl ModrinthAPI {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::structs::projects::ProjectType;
-    use crate::structs::search::Facet;
+    use crate::structs::{projects::ProjectType, search::Facet};
 
     #[tokio::test]
     async fn search_project() -> Result<()> {
@@ -131,7 +129,7 @@ mod tests {
         let title = response.hits.first().unwrap().slug.as_ref();
 
         assert!(title.is_some());
-        assert_eq!(title.unwrap(), "xaeros-minimap");
+        assert_eq!(title.ok_or(0), Ok(&String::from("xaeros-minimap")));
         Ok(())
     }
 }
