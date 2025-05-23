@@ -126,7 +126,8 @@ mod tests {
             )
             .await?;
 
-        let title = response.hits.first().unwrap().slug.as_ref();
+        let response = response.hits.first().unwrap();
+        let title = response.slug.as_ref();
 
         assert!(title.is_some());
         assert_eq!(title.ok_or(0), Ok(&String::from("xaeros-minimap")));
