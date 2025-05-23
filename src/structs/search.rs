@@ -7,6 +7,72 @@ pub struct ExtendedSearch {
     pub facets: Vec<Vec<Facet>>,
 }
 
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Response {
+    pub hits: Vec<SearchHit>,
+    /// The number of results that were skipped by the query
+    pub offset: usize,
+    /// The number of results that were returned by the query
+    pub limit: usize,
+    /// The total number of results that match the query
+    pub total_hits: usize,
+}
+
+impl Response {
+    pub fn show_hits(&self) {
+        self.hits.iter().for_each(|h| println!("{h}"));
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct SearchHit {
+    /// The project's slug, used for vanity URLs.
+    pub slug: Option<String>,
+    pub title: String,
+    pub description: String,
+    pub categories: Vec<String>,
+    pub client_side: projects::ProjectSupportRange,
+    pub server_side: projects::ProjectSupportRange,
+    pub project_type: projects::ProjectType,
+    pub downloads: usize,
+    pub icon_url: Option<String>,
+    /// The RGB color of the project, automatically generated from the project icon
+    pub color: Option<usize>,
+    /// The ID of the moderation thread associated with this project
+    pub thread_id: Option<String>,
+    pub monetization_status: Option<projects::MonetizationStatus>,
+    pub project_id: String,
+    /// Author
+    pub author: String,
+    /// A list of the project's primary/featured categories
+    pub display_categories: Vec<String>,
+    #[serde(rename = "versions")]
+    /// A list of all the game versions supported by the project
+    pub game_versions: Vec<String>,
+    pub follows: usize,
+    pub date_created: Date,
+    pub date_modified: Date,
+    /// The latest game version that this project supports
+    pub latest_version: String,
+    /// The SPDX license ID of a project
+    pub license: String,
+    pub gallery: Vec<Url>,
+    pub featured_gallery: Option<Url>,
+}
+
+impl Display for SearchHit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Title: {} ({} downloads)\nAuthor: {}\nCategories: {}",
+            self.title,
+            self.downloads,
+            self.author,
+            self.display_categories.join(",")
+        )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Sort {
     Relevance,
@@ -100,74 +166,5 @@ impl Display for Facet {
             } => format!("{_type} {operation} {value}"),
         };
         write!(f, "{}", str)
-    }
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Response {
-    pub hits: Vec<SearchHit>,
-    /// The number of results that were skipped by the query
-    pub offset: usize,
-    /// The number of results that were returned by the query
-    pub limit: usize,
-    /// The total number of results that match the query
-    pub total_hits: usize,
-}
-
-impl Response {
-    pub fn show_hits(&self) {
-        self.hits.iter().for_each(|h| println!("{h}"));
-    }
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SearchHit {
-    /// The project's slug, used for vanity URLs.
-    pub slug: Option<String>,
-    pub title: String,
-    pub description: String,
-    pub categories: Vec<String>,
-    // TODO: read #1 in TODO.md file (structs\projects section)
-    // pub client_side: projects::ProjectSupportRange,
-    // pub server_side: projects::ProjectSupportRange,
-
-    // TODO: read #7 in TODO.md file (structs\projects section)
-    // pub project_type: projects::ProjectType,
-    pub downloads: usize,
-    pub icon_url: Option<String>,
-    /// The RGB color of the project, automatically generated from the project icon
-    pub color: Option<usize>,
-    /// The ID of the moderation thread associated with this project
-    pub thread_id: Option<String>,
-    pub monetization_status: Option<projects::MonetizationStatus>,
-    pub project_id: String,
-    /// Author
-    pub author: String,
-    /// A list of the project's primary/featured categories
-    pub display_categories: Vec<String>,
-    #[serde(rename = "versions")]
-    /// A list of all the game versions supported by the project
-    pub game_versions: Vec<String>,
-    pub follows: usize,
-    pub date_created: Date,
-    pub date_modified: Date,
-    /// The latest game version that this project supports
-    pub latest_version: String,
-    /// The SPDX license ID of a project
-    pub license: String,
-    pub gallery: Vec<Url>,
-    pub featured_gallery: Option<Url>,
-}
-
-impl Display for SearchHit {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Title: {} ({} downloads)\nAuthor: {}\nCategories: {}",
-            self.title,
-            self.downloads,
-            self.author,
-            self.display_categories.join(",")
-        )
     }
 }
