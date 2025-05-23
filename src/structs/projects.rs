@@ -106,3 +106,12 @@ pub struct License {
     pub name: String,
     pub url: Option<String>,
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectSupportRange {
+    Required,
+    Optional,
+    Unsupported,
+    Unknown,
+}
