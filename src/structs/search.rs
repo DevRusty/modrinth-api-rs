@@ -134,8 +134,7 @@ pub struct SearchHit {
     // TODO: read #7 in TODO.md file (structs\projects section)
     // pub project_type: projects::ProjectType,
     pub downloads: usize,
-    #[serde(deserialize_with = "deserialise_optional_url")]
-    pub icon_url: Option<Url>,
+    pub icon_url: Option<String>,
     /// The RGB color of the project, automatically generated from the project icon
     pub color: Option<usize>,
     /// The ID of the moderation thread associated with this project
