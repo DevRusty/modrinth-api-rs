@@ -2,7 +2,7 @@
 //!
 //! [documentation](https://docs.modrinth.com/api/operations/tags/projects/)
 
-use super::Date;
+use super::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,9 +70,7 @@ pub struct Project {
     pub approved: Option<Date>,
     pub queued: Option<Date>,
     pub followers: usize,
-    /// TODO: read #6 in TODO.md file (structs\projects section)
-    #[serde(skip)]
-    pub license: Option<Vec<String>>, // placeholder
+    pub license: License,
     /// A list of the version IDs of the project (will never be empty unless draft status)
     pub versions: Vec<String>,
     /// A list of all the game versions supported by the project
@@ -100,4 +98,11 @@ pub enum MonetizationStatus {
     Monetized,
     Demonetized,
     ForceDemonetized,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct License {
+    pub id: String,
+    pub name: String,
+    pub url: Option<String>,
 }

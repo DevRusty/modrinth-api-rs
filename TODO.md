@@ -10,5 +10,5 @@
 - [ ] - Implement custom struct for `requested_status` value (w/ Option)
 - [ ] - implement custom deserializer for URL links
 - [ ] - implement custom struct for donation links
-- [ ] - implement custom struct for license
+- [x] - implement custom struct for license
 - [x] - implement custom `ProjectStatus` struct
