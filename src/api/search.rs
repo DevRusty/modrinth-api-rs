@@ -1,3 +1,5 @@
+//! API functions to search items by query
+
 use super::*;
 use crate::structs::search::{ExtendedSearch, Response, Sort};
 use crate::utils::{RequestBuilderCustomSend, UrlJoinAll, UrlWithQuery};
