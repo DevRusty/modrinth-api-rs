@@ -5,7 +5,7 @@
 use super::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Project {
     /// The slug of a project, used for vanity URLs
     pub slug: String,
@@ -16,45 +16,30 @@ pub struct Project {
     /// A list of the categories that the project has
     pub categories: Vec<String>,
     /// The client side support of the project
-    pub client_side: String, // TODO: read #1 in TOOD.md file (structs\projects section)
+    pub client_side: ProjectSupportRange,
     /// The server side support of the project
-    pub server_side: String, // TODO: read #1 in TODO.md file (structs\projects section)
+    pub server_side: ProjectSupportRange,
     /// A long form description of the project
     pub body: String,
     /// The status of the project
-    ///
-    /// TODO: read #2 in TODO.md file (structs\projects section)
-    pub status: String,
+    pub status: ProjectStatus,
     /// The requested status when submitting for review or scheduling the project for release
-    ///
-    /// TODO: read #3 in TODO.md file (structs\projects section)
-    pub requested_status: Option<String>,
+    pub requested_status: Option<RequestedStatus>,
     /// A list of categories which are searchable but non-primary
     pub additional_categories: Vec<String>,
     /// An optional link to where to submit bugs or issues with the project
-    ///
-    /// TODO: read #4 in TODO.md file (structs\projects section)
     pub issues_url: Option<String>,
     /// An optional link to the source code of the project
-    ///
-    /// TODO: read #4 in TODO.md file (structs\projects section)
     pub source_url: Option<String>,
     /// An optional link to the project’s wiki page or other relevant information
-    ///
-    /// TODO: read #4 in TODO.md file (structs\projects section)
     pub wiki_url: Option<String>,
     /// An optional invite link to the project’s discord
-    ///
-    /// TODO: read #4 in TODO.md file (structs\projects section)
     pub discord_url: Option<String>,
-    /// Donation links
-    ///
-    /// TODO: read #5 in TODO.md file (structs\projects section)
-    #[serde(skip)]
-    pub donation_links: Option<Vec<String>>,
+    /// Donation links / urls
+    pub donation_urls: Vec<DonationLink>,
     pub project_type: String,
     pub downloads: usize,
-    /// TODO: read #4 in TODO.md file (structs\projects section)
+    /// Project icon URL
     pub icon_url: Option<String>,
     /// The RGB color of the project, automatically generated from the project icon
     pub color: Option<usize>,
@@ -77,6 +62,16 @@ pub struct Project {
     pub game_versions: Vec<String>,
     /// A list of all the loaders supported by the project
     pub loaders: Vec<String>,
+}
+
+impl Project {
+    /// Returns a read-only reference to the project's donation URLs.
+    ///
+    /// This method serves as an alias/getter for the [`Project::donation_urls`] field,
+    /// providing direct access to the same underlying data.
+    pub fn donation_links(&self) -> &Vec<DonationLink> {
+        self.donation_urls.as_ref()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,4 +109,36 @@ pub enum ProjectSupportRange {
     Optional,
     Unsupported,
     Unknown,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectStatus {
+    Approved,
+    Archived,
+    Rejected,
+    Draft,
+    Unlisted,
+    Processing,
+    Withheld,
+    Scheduled,
+    Private,
+    Unknown,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum RequestedStatus {
+    Approved,
+    Archived,
+    Unlisted,
+    Private,
+    Draft,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+pub struct DonationLink {
+    pub id: String,
+    pub platform: String,
+    pub url: String,
 }
