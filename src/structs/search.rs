@@ -58,6 +58,58 @@ pub struct SearchHit {
     pub license: String,
     pub gallery: Vec<Url>,
     pub featured_gallery: Option<Url>,
+
+    #[serde(skip)]
+    pub project_info: Option<Project>,
+}
+
+impl SearchHit {
+    /// Fetches the full project details for this search hit from the Modrinth API.
+    ///
+    /// A `SearchHit` provides a summarized view of a project. This asynchronous method
+    /// retrieves the complete [`Project`] data from the Modrinth API using the
+    /// [`self.project_id`] and populates the [`self.project_info`] field.
+    ///
+    /// This method consumes `self` and returns a modified `SearchHit` instance
+    /// with the `project_info` field updated.
+    ///
+    /// # Arguments
+    ///
+    /// * `api` - A reference to the [`ModrinthAPI`] client instance, used to perform the API request.
+    ///
+    /// # Returns
+    ///
+    /// `Result<Self>`:
+    /// - `Ok(self)`: The updated `SearchHit` instance with `self.project_info` populated
+    ///   with the full [`Project`] data.
+    /// - `Err(crate::error::Error)`: An error occurred during the API request or data processing,
+    ///   e.g., network issues, invalid project ID, rate limiting, or API response errors.
+    ///
+    pub async fn fetch_project(mut self, api: &ModrinthAPI) -> Result<Self> {
+        let result = api.get_project_by_id(self.project_id.as_str()).await?;
+        self.project_info = Some(result);
+        Ok(self)
+    }
+
+    /// Retrieves the complete [`Project`] data for this search hit from the Modrinth API.
+    ///
+    /// This asynchronous method fetches the full [`Project`] object corresponding to
+    /// the [`self.project_id`] without modifying the `SearchHit` instance itself.
+    /// This is useful when you only need the full project data temporarily or in a
+    /// context where `SearchHit` ownership is not desired.
+    ///
+    /// # Arguments
+    ///
+    /// * `api` - A reference to the [`ModrinthAPI`] client instance, used to perform the API request.
+    ///
+    /// # Returns
+    ///
+    /// `Result<Project>`:
+    /// - `Ok(Project)`: The full [`Project`] data.
+    /// - `Err(crate::error::Error)`: An error occurred during the API request or data processing.
+    pub async fn get_full_project(&self, api: &ModrinthAPI) -> Result<Project> {
+        api.get_project_by_id(self.project_id.as_str()).await
+    }
 }
 
 impl Display for SearchHit {
@@ -121,7 +173,7 @@ pub enum Facet {
 }
 
 impl Serialize for Facet {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
