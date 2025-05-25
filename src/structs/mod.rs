@@ -1,6 +1,7 @@
 pub mod projects;
 pub mod search;
 
+use crate::{ModrinthAPI, Result, structs::projects::Project};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
