@@ -88,6 +88,20 @@ pub trait UrlWithQuery: Sized {
         name: impl AsRef<str>,
         value: impl Serialize,
     ) -> Self::SerialiseResult<Self>;
+
+    /// Adds a query parameter to the URL only if the `value` is `Some(T)`.
+    /// The `value` is serialized to JSON.
+    ///
+    /// # Arguments
+    /// * `key` - The name of the query parameter.
+    /// * `value` - An `Option` containing the value to be serialized. If `None`, no parameter is added.
+    ///
+    /// # Returns
+    fn add_optional_query_json<T: Serialize>(
+        self,
+        key: impl AsRef<str>,
+        value: Option<T>,
+    ) -> Result<Url>;
 }
 
 impl UrlWithQuery for Url {
@@ -107,5 +121,16 @@ impl UrlWithQuery for Url {
         self.query_pairs_mut()
             .append_pair(name.as_ref(), &serde_json::to_string(&value)?);
         Ok(self)
+    }
+
+    fn add_optional_query_json<T: Serialize>(
+        self,
+        key: impl AsRef<str>, // Must match trait signature
+        value: Option<T>,
+    ) -> Result<Url> {
+        match value {
+            Some(value) => Ok(self.with_query_json(key, value)?),
+            None => Ok(self),
+        }
     }
 }

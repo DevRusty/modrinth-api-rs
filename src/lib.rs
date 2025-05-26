@@ -28,6 +28,7 @@ pub enum Error {
     ReqwestError(#[from] reqwest::Error),
     JSONError(#[from] serde_json::Error),
     InvalidHeaderValue(#[from] InvalidHeaderValue),
+    ParseError(#[from] url::ParseError),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 

@@ -1,5 +1,6 @@
 pub mod projects;
 pub mod search;
+pub mod versions;
 
 use crate::{ModrinthAPI, Result, structs::projects::Project};
 use serde::{Deserialize, Serialize};
