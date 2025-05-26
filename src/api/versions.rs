@@ -17,12 +17,6 @@ impl ModrinthAPI {
     ///   If `extra_options` is `None`, all versions for the project will be returned without any filters.
     ///
     ///   Fields of `ExtraOptions`:
-    ///   - `number`: `Option<&str>` - If `Some`, this should be the specific version ID or a version number string (e.g., "1.0.0").
-    ///     When `number` is provided, the function attempts to fetch that specific version. In this case,
-    ///     the other filtering parameters (`loaders`, `game_versions`, `featured`) within `ExtraOptions`
-    ///     will be ignored by the Modrinth API, as the request targets a single version endpoint
-    ///     (`/project/{id}/version/{number}`). The returned `Vec<Version>` will contain at most one element.
-    ///     Example: `number: Some("0.76.0+1.19.2")`
     ///
     ///   - `loaders`: `Option<&[&str]>` - A slice of loader IDs (e.g., `&["forge", "fabric"]`)
     ///     to filter the list of versions. This is only applied if `number` is `None`.
