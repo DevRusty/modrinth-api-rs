@@ -40,22 +40,13 @@ pub struct Version {
 ///     If `Some(false)`, featured versions will be excluded. If `None`, both featured and
 ///     non-featured versions are included. This is only applied if `number` is `None`.
 ///     Example: `featured: Some(true)`
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ProjectVersionsFilter<'a> {
     pub loaders: Option<&'a [&'a str]>,
     pub game_versions: Option<&'a [&'a str]>,
     pub featured: Option<bool>,
 }
 
-impl<'a> Default for ProjectVersionsFilter<'a> {
-    fn default() -> Self {
-        ProjectVersionsFilter {
-            loaders: None,
-            game_versions: None,
-            featured: None,
-        }
-    }
-}
 
 /// Extra parameters for [ModrinthAPI::get_project_version] function
 ///

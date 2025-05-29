@@ -41,17 +41,14 @@ impl ModrinthAPI {
 
         let mut url = BASE_URL.join_all(vec!["project", project_id, "version"]);
 
-        match extra_options {
-            Some(extra_options) => {
-                url = BASE_URL.join_all(vec![
-                    "project", project_id, "version",
-                    // extra_options.number.unwrap_or(""),
-                ]);
-                url = url.add_optional_query_json("loaders", extra_options.loaders)?;
-                url = url.add_optional_query_json("game_versions", extra_options.game_versions)?;
-                url = url.add_optional_query_json("featured", extra_options.featured)?;
-            }
-            None => {}
+        if let Some(extra_options) = extra_options {
+            url = BASE_URL.join_all(vec![
+                "project", project_id, "version",
+                // extra_options.number.unwrap_or(""),
+            ]);
+            url = url.add_optional_query_json("loaders", extra_options.loaders)?;
+            url = url.add_optional_query_json("game_versions", extra_options.game_versions)?;
+            url = url.add_optional_query_json("featured", extra_options.featured)?;
         }
 
         self.client.get(url).custom_send_json().await
@@ -110,19 +107,16 @@ impl ModrinthAPI {
 
         let mut url = BASE_URL.join_all(vec!["project", project_id, "version"]);
 
-        match extra_options {
-            Some(extra_options) => {
-                url = BASE_URL.join_all(vec![
-                    "project",
-                    project_id,
-                    "version",
-                    extra_options.number.unwrap(),
-                ]);
-                url = url.add_optional_query_json("loaders", extra_options.loaders)?;
-                url = url.add_optional_query_json("game_versions", extra_options.game_versions)?;
-                url = url.add_optional_query_json("featured", extra_options.featured)?;
-            }
-            None => {}
+        if let Some(extra_options) = extra_options {
+            url = BASE_URL.join_all(vec![
+                "project",
+                project_id,
+                "version",
+                extra_options.number.unwrap(),
+            ]);
+            url = url.add_optional_query_json("loaders", extra_options.loaders)?;
+            url = url.add_optional_query_json("game_versions", extra_options.game_versions)?;
+            url = url.add_optional_query_json("featured", extra_options.featured)?;
         }
 
         self.client.get(url).custom_send_json().await
