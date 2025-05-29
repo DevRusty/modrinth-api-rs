@@ -64,7 +64,7 @@ impl ModrinthAPI {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn extended_search(
+    pub async fn search(
         &self,
         query: &str,
         sort: &Sort,
@@ -92,19 +92,22 @@ impl ModrinthAPI {
         self.client.get(url).custom_send_json().await
     }
 
-    #[deprecated(since = "0.1.1", note = "Migrate to `extended_search` method")]
-    pub async fn search(&self, query: &str, sort: &Sort, limit: Option<u32>) -> Result<Response> {
-        let limit = limit.unwrap_or(20);
-
-        let url = BASE_URL
-            .join_all(vec!["search"])
-            .with_query("query", query)
-            .with_query("index", sort)
-            .with_query("limit", limit);
-
-        println!("{}", url);
-
-        self.client.get(url).custom_send_json().await
+    /// Performs an extended search for projects on Modrinth, allowing for more granular control over the search
+    /// results through various filtering options.
+    ///
+    /// This function is a reference to [ModrinthAPI::search] function (backward compatibility)
+    #[deprecated(
+        since = "0.2.0",
+        note = "This function is a backward compatibility with older versions of modrinth-api-rs. Please use ModrinthAPI::search instead"
+    )]
+    pub async fn extended_search(
+        &self,
+        query: &str,
+        sort: &Sort,
+        limit: Option<u32>,
+        extended_search: Option<ExtendedSearch>,
+    ) -> Result<Response> {
+        self.search(query, sort, limit, extended_search).await
     }
 }
 
