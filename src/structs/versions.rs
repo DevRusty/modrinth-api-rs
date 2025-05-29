@@ -1,6 +1,9 @@
 use super::*;
 use serde::{Deserialize, Serialize};
 
+/// The Version struct
+///
+/// Documentation: https://docs.modrinth.com/api/operations/getprojectversions/#200
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Version {
     pub name: String,
@@ -21,12 +24,79 @@ pub struct Version {
     pub files: Vec<File>,
 }
 
+/// Extra parameters for [ModrinthAPI::get_project_versions] function
+///
+/// Fields of `ProjectVersionsFilter`:
+///
+///   - `loaders`: `Option<&[&str]>` - A slice of loader IDs (e.g., `&["forge", "fabric"]`)
+///     to filter the list of versions. This is only applied if `number` is `None`.
+///     Example: `loaders: Some(&["fabric", "quilt"])`
+///
+///   - `game_versions`: `Option<&[&str]>` - A slice of game version IDs (e.g., `&["1.19.2", "1.20.1"]`)
+///     to filter the list of versions. This is only applied if `number` is `None`.
+///     Example: `game_versions: Some(&["1.20.1"])`
+///
+///   - `featured`: `Option<bool>` - If `Some(true)`, only featured versions will be returned.
+///     If `Some(false)`, featured versions will be excluded. If `None`, both featured and
+///     non-featured versions are included. This is only applied if `number` is `None`.
+///     Example: `featured: Some(true)`
 #[derive(Debug)]
-pub struct ExtraOptions<'a> {
-    // pub number: Option<&'a str>,
+pub struct ProjectVersionsFilter<'a> {
     pub loaders: Option<&'a [&'a str]>,
     pub game_versions: Option<&'a [&'a str]>,
     pub featured: Option<bool>,
+}
+
+impl<'a> Default for ProjectVersionsFilter<'a> {
+    fn default() -> Self {
+        ProjectVersionsFilter {
+            loaders: None,
+            game_versions: None,
+            featured: None,
+        }
+    }
+}
+
+/// Extra parameters for [ModrinthAPI::get_project_version] function
+///
+/// Fields
+///
+///   - `number`: `Option<&str>` - Specific version ID or a version number string (e.g., "1.0.0").
+///     Example: `number: Some("0.76.0+1.19.2")`
+///
+///   - `loaders`: `Option<&[&str]>` - A slice of loader IDs (e.g., `&["forge", "fabric"]`)
+///     to filter the list of versions. This is only applied if `number` is `None`.
+///     Example: `loaders: Some(&["fabric", "quilt"])`
+///
+///   - `game_versions`: `Option<&[&str]>` - A slice of game version IDs (e.g., `&["1.19.2", "1.20.1"]`)
+///     to filter the list of versions. This is only applied if `number` is `None`.
+///     Example: `game_versions: Some(&["1.20.1"])`
+///
+///   - `featured`: `Option<bool>` - If `Some(true)`, only featured versions will be returned.
+///     If `Some(false)`, featured versions will be excluded. If `None`, both featured and
+///     non-featured versions are included. This is only applied if `number` is `None`.
+///     Example: `featured: Some(true)`
+#[derive(Debug)]
+pub struct ProjectVersionParams<'a> {
+    /// Get a version given a version number or ID
+    ///
+    /// Note:
+    ///   * if the version number provided matches multiple versions, only the oldest matching version will be returned.
+    pub number: Option<&'a str>,
+    pub loaders: Option<&'a [&'a str]>,
+    pub game_versions: Option<&'a [&'a str]>,
+    pub featured: Option<bool>,
+}
+
+impl<'a> Default for ProjectVersionParams<'a> {
+    fn default() -> Self {
+        ProjectVersionParams {
+            number: Some(""),
+            loaders: None,
+            game_versions: None,
+            featured: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
