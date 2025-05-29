@@ -5,7 +5,7 @@ use modrinth_api::{Error, ModrinthAPI};
 async fn main() -> Result<(), Error> {
     let api = ModrinthAPI::default();
     let result = api
-        .extended_search(
+        .search(
             "xaeros",         // Query
             &Sort::Downloads, // Sort
             Some(20),         // Maximum number of results to return.
