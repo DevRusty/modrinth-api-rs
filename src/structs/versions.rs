@@ -47,7 +47,6 @@ pub struct ProjectVersionsFilter<'a> {
     pub featured: Option<bool>,
 }
 
-
 /// Extra parameters for [ModrinthAPI::get_project_version] function
 ///
 /// Fields
