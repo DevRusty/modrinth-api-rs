@@ -120,7 +120,7 @@ mod tests {
     async fn search_project() -> Result<()> {
         let api = ModrinthAPI::default();
         let response = api
-            .extended_search(
+            .search(
                 "xaeros",
                 &Sort::Downloads,
                 None,
@@ -143,7 +143,7 @@ mod tests {
     async fn test_fetching_project_with_mut() -> Result<()> {
         let api = ModrinthAPI::default();
         let response = api
-            .extended_search(
+            .search(
                 "xaeros",
                 &Sort::Downloads,
                 None,
@@ -170,7 +170,7 @@ mod tests {
     async fn test_fetching_project_without_mut() -> Result<()> {
         let api = ModrinthAPI::default();
         let response = api
-            .extended_search(
+            .search(
                 "xaeros",
                 &Sort::Downloads,
                 None,
