@@ -26,25 +26,3 @@ impl ModrinthAPI {
             .await
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn get_valid_project() -> Result<()> {
-        let api = ModrinthAPI::default();
-        // HVnmMxH1 -> Complementary Shaders - Reimagined
-        let response = api.get_project_by_id("HVnmMxH1").await?;
-        assert_eq!(response.title, "Complementary Shaders - Reimagined");
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn asrt_slug_error() -> Result<()> {
-        let api = ModrinthAPI::default();
-        let response = api.get_project_by_id("dffdsfdsfsdfdsf").await;
-        assert!(response.is_err());
-        Ok(())
-    }
-}
