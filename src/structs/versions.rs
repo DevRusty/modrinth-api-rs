@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// The Version struct
 ///
-/// Documentation: https://docs.modrinth.com/api/operations/getprojectversions/#200
+/// Documentation: <https://docs.modrinth.com/api/operations/getprojectversions/#200>
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Version {
     pub name: String,
